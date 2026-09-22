@@ -1,1 +1,356 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
 
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Penjurian GTK 2026</title>
+
+  <link
+    rel="stylesheet"
+    href="style.css"
+  >
+</head>
+
+<body>
+
+  <!-- =========================================
+       LOGIN
+       ========================================= -->
+
+  <section id="loginPage" class="page">
+
+    <div class="login-card">
+
+      <div class="logo">
+        GTK
+      </div>
+
+      <h1>Penjurian GTK</h1>
+
+      <p class="subtitle">
+        Dedikatif & Transformatif 2026
+      </p>
+
+      <div class="form-group">
+
+        <label for="juriSelect">
+          Pilih Juri
+        </label>
+
+        <select id="juriSelect">
+
+          <option value="">
+            -- Pilih Juri --
+          </option>
+
+          <option value="Juri 1">
+            Juri 1
+          </option>
+
+          <option value="Juri 2">
+            Juri 2
+          </option>
+
+          <option value="Juri 3">
+            Juri 3
+          </option>
+
+          <option value="Juri 4">
+            Juri 4
+          </option>
+
+          <option value="Juri 5">
+            Juri 5
+          </option>
+
+          <option value="Juri 6">
+            Juri 6
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <div class="form-group">
+
+        <label for="pinInput">
+          PIN
+        </label>
+
+        <input
+          type="password"
+          id="pinInput"
+          placeholder="Masukkan PIN"
+          inputmode="numeric"
+        >
+
+      </div>
+
+
+      <button
+        id="loginButton"
+        class="btn btn-primary"
+        onclick="login()"
+      >
+        Masuk
+      </button>
+
+
+      <div
+        id="loginMessage"
+        class="message"
+      ></div>
+
+    </div>
+
+  </section>
+
+
+  <!-- =========================================
+       DASHBOARD
+       ========================================= -->
+
+  <section
+    id="dashboardPage"
+    class="page hidden"
+  >
+
+    <header class="topbar">
+
+      <div>
+
+        <h1>Penjurian GTK 2026</h1>
+
+        <div
+          id="juriInfo"
+          class="juri-info"
+        ></div>
+
+      </div>
+
+
+      <button
+        class="btn btn-danger"
+        onclick="logout()"
+      >
+        Keluar
+      </button>
+
+    </header>
+
+
+    <main class="container">
+
+      <!-- KATEGORI -->
+
+      <div id="categoryPage">
+
+        <h2>Pilih Kategori</h2>
+
+        <div class="category-grid">
+
+          <button
+            class="category-card"
+            onclick="openCategory('kepala')"
+          >
+
+            <span class="category-number">
+              01
+            </span>
+
+            <strong>
+              Kepala Sekolah Transformatif
+            </strong>
+
+            <small>
+              12 peserta
+            </small>
+
+          </button>
+
+
+          <button
+            class="category-card"
+            onclick="openCategory('guruTransformatif')"
+          >
+
+            <span class="category-number">
+              02
+            </span>
+
+            <strong>
+              Guru Transformatif
+            </strong>
+
+            <small>
+              12 peserta
+            </small>
+
+          </button>
+
+
+          <button
+            class="category-card"
+            onclick="openCategory('guruDedikatif')"
+          >
+
+            <span class="category-number">
+              03
+            </span>
+
+            <strong>
+              Guru Dedikatif
+            </strong>
+
+            <small>
+              12 peserta
+            </small>
+
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <!-- PESERTA -->
+
+      <div
+        id="participantPage"
+        class="hidden"
+      >
+
+        <div class="section-header">
+
+          <button
+            class="btn btn-secondary"
+            onclick="backToCategories()"
+          >
+            ← Kembali
+          </button>
+
+          <div>
+
+            <h2 id="categoryTitle"></h2>
+
+            <p>
+              Pilih peserta yang akan dinilai
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <div
+          id="participantList"
+          class="participant-grid"
+        ></div>
+
+      </div>
+
+
+      <!-- FORM PENILAIAN -->
+
+      <div
+        id="scoringPage"
+        class="hidden"
+      >
+
+        <div class="section-header">
+
+          <button
+            class="btn btn-secondary"
+            onclick="backToParticipants()"
+          >
+            ← Daftar Peserta
+          </button>
+
+          <div>
+
+            <h2 id="participantName"></h2>
+
+            <p id="participantCategory"></p>
+
+          </div>
+
+        </div>
+
+
+        <div class="score-card">
+
+          <div class="score-info">
+
+            <div>
+              <span>Juri</span>
+              <strong id="scoreJuri"></strong>
+            </div>
+
+            <div>
+              <span>Peserta</span>
+              <strong id="scoreNo"></strong>
+            </div>
+
+          </div>
+
+
+          <div id="scoreForm"></div>
+
+
+          <div class="score-actions">
+
+            <button
+              class="btn btn-primary"
+              onclick="saveScore()"
+            >
+              💾 Simpan Nilai
+            </button>
+
+            <button
+              class="btn btn-warning"
+              onclick="lockScore()"
+            >
+              🔒 Kunci Nilai
+            </button>
+
+          </div>
+
+
+          <div
+            id="scoreMessage"
+            class="message"
+          ></div>
+
+        </div>
+
+      </div>
+
+    </main>
+
+  </section>
+
+
+  <!-- LOADING -->
+
+  <div
+    id="loading"
+    class="loading hidden"
+  >
+
+    <div class="spinner"></div>
+
+    <span>Memproses...</span>
+
+  </div>
+
+
+  <script src="app.js"></script>
+
+</body>
+</html>
