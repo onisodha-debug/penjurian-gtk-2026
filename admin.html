@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Admin - Penjurian GTK 2026</title>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <!-- LOGIN ADMIN -->
+
+  <section id="adminLoginPage" class="page">
+
+    <div class="login-card">
+
+      <div class="logo">
+        ADM
+      </div>
+
+      <h1>Admin Penjurian</h1>
+
+      <p class="subtitle">
+        Sistem Penjurian GTK 2026
+      </p>
+
+      <div class="form-group">
+
+        <label for="adminPin">
+          PIN Admin
+        </label>
+
+        <input
+          type="password"
+          id="adminPin"
+          placeholder="Masukkan PIN admin"
+          inputmode="numeric"
+        >
+
+      </div>
+
+      <button
+        class="btn btn-primary"
+        onclick="adminLogin()"
+      >
+        Masuk sebagai Admin
+      </button>
+
+      <div
+        id="adminLoginMessage"
+        class="message"
+      ></div>
+
+    </div>
+
+  </section>
+
+
+  <!-- DASHBOARD ADMIN -->
+
+  <section
+    id="adminDashboard"
+    class="page hidden"
+  >
+
+    <header class="topbar">
+
+      <div>
+
+        <h1>Dashboard Admin</h1>
+
+        <div class="juri-info">
+          Penjurian GTK Dedikatif & Transformatif 2026
+        </div>
+
+      </div>
+
+      <button
+        class="btn btn-danger"
+        onclick="adminLogout()"
+      >
+        Keluar
+      </button>
+
+    </header>
+
+
+    <main class="container">
+
+      <!-- RINGKASAN -->
+
+      <h2>Monitoring Penilaian</h2>
+
+      <div
+        id="summaryCards"
+        class="category-grid"
+      ></div>
+
+
+      <!-- STATUS JURI -->
+
+      <h2 style="margin-top:40px;">
+        Status Penilaian Juri
+      </h2>
+
+      <div class="table-wrapper">
+
+        <table id="juryStatusTable">
+
+          <thead>
+
+            <tr>
+
+              <th>Juri</th>
+
+              <th>
+                Kepala Sekolah
+              </th>
+
+              <th>
+                Guru Transformatif
+              </th>
+
+              <th>
+                Guru Dedikatif
+              </th>
+
+            </tr>
+
+          </thead>
+
+          <tbody></tbody>
+
+        </table>
+
+      </div>
+
+
+      <!-- REKAP -->
+
+      <h2 style="margin-top:40px;">
+        Rekap Nilai
+      </h2>
+
+      <div class="admin-controls">
+
+        <select
+          id="rekapCategory"
+          onchange="loadRekapCategory()"
+        >
+
+          <option value="kepala">
+            Kepala Sekolah Transformatif
+          </option>
+
+          <option value="guruTransformatif">
+            Guru Transformatif
+          </option>
+
+          <option value="guruDedikatif">
+            Guru Dedikatif
+          </option>
+
+        </select>
+
+        <button
+          class="btn btn-primary"
+          onclick="loadRekap()"
+        >
+          ↻ Refresh
+        </button>
+
+      </div>
+
+
+      <div class="table-wrapper">
+
+        <table id="rekapTable">
+
+          <thead>
+
+            <tr>
+
+              <th>No</th>
+              <th>Nama Peserta</th>
+              <th>Juri 1</th>
+              <th>Juri 2</th>
+              <th>Juri 3</th>
+              <th>Juri 4</th>
+              <th>Juri 5</th>
+              <th>Juri 6</th>
+              <th>Rata-rata</th>
+              <th>Peringkat</th>
+
+            </tr>
+
+          </thead>
+
+          <tbody></tbody>
+
+        </table>
+
+      </div>
+
+
+      <!-- HASIL JUARA -->
+
+      <h2 style="margin-top:40px;">
+        Hasil Juara
+      </h2>
+
+      <div
+        id="winnerContainer"
+        class="winner-grid"
+      ></div>
+
+    </main>
+
+  </section>
+
+
+  <div
+    id="loading"
+    class="loading hidden"
+  >
+
+    <div class="spinner"></div>
+
+    <span>Memproses...</span>
+
+  </div>
+
+
+  <script src="admin.js"></script>
+
+</body>
+</html>
