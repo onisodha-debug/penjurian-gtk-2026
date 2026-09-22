@@ -1,6 +1,14 @@
+/* =====================================================
+   KONFIGURASI
+   ===================================================== */
+
 const API_URL =
   'https://script.google.com/macros/s/AKfycbxvH2PRAXgZTtePXBm2vsnNt0WfhOgCayNzPTVrnrmf1iXFZ8hO6o7Ywhqz5LCBmlAx/exec';
 
+
+/* =====================================================
+   STATE
+   ===================================================== */
 
 let adminToken = null;
 
@@ -161,7 +169,8 @@ async function adminLogin() {
     if (!result.success) {
 
       throw new Error(
-        result.message
+        result.message ||
+        'Login admin gagal.'
       );
     }
 
@@ -177,6 +186,7 @@ async function adminLogin() {
 
 
     showAdminDashboard();
+
 
     await loadDashboard();
 
@@ -242,6 +252,7 @@ async function restoreAdminSession() {
 
     showAdminDashboard();
 
+
     await loadDashboard();
 
 
@@ -253,7 +264,7 @@ async function restoreAdminSession() {
 
 
 /* =====================================================
-   DASHBOARD
+   TAMPILKAN DASHBOARD
    ===================================================== */
 
 function showAdminDashboard() {
@@ -281,15 +292,30 @@ function showAdminDashboard() {
 
 async function loadDashboard() {
 
-  await Promise.all([
+  try {
 
-    loadStatusJuri(),
+    await Promise.all([
 
-    loadRekap(),
+      loadStatusJuri(),
 
-    loadJuara()
+      loadRekap(),
 
-  ]);
+      loadJuara()
+
+    ]);
+
+  } catch (error) {
+
+    console.error(
+      'Dashboard error:',
+      error
+    );
+
+    alert(
+      'Sebagian data dashboard gagal dimuat: ' +
+      error.message
+    );
+  }
 }
 
 
@@ -314,22 +340,189 @@ async function loadStatusJuri() {
   if (!result.success) {
 
     throw new Error(
-      result.message
+      result.message ||
+      'Gagal mengambil status juri.'
     );
   }
 
 
+  const data =
+    Array.isArray(result.data)
+      ? result.data
+      : [];
+
+
+  /*
+   * ==================================================
+   * RINGKASAN 3 KATEGORI
+   *
+   * Yang dihitung adalah JUMLAH PENILAIAN JURI,
+   * bukan jumlah peserta unik.
+   *
+   * Misalnya:
+   * 12 peserta x 6 juri = 72 penilaian maksimum.
+   * ==================================================
+   */
+
+  const summary = {
+
+    kepala: {
+      sudah: 0,
+      total: 0
+    },
+
+    guruTransformatif: {
+      sudah: 0,
+      total: 0
+    },
+
+    guruDedikatif: {
+      sudah: 0,
+      total: 0
+    }
+
+  };
+
+
+  data.forEach(
+    function(item) {
+
+      const kategori =
+        item.kategori || {};
+
+
+      /* ------------------------------------------
+         KEPALA SEKOLAH
+         ------------------------------------------ */
+
+      if (kategori.kepala) {
+
+        summary.kepala.sudah +=
+          Number(
+            kategori.kepala.sudahDinilai || 0
+          );
+
+
+        summary.kepala.total =
+          Math.max(
+            summary.kepala.total,
+
+            Number(
+              kategori.kepala.totalPeserta || 0
+            )
+          );
+
+      }
+
+
+      /* ------------------------------------------
+         GURU TRANSFORMATIF
+         ------------------------------------------ */
+
+      if (
+        kategori.guruTransformatif
+      ) {
+
+        summary.guruTransformatif.sudah +=
+          Number(
+            kategori
+              .guruTransformatif
+              .sudahDinilai || 0
+          );
+
+
+        summary.guruTransformatif.total =
+          Math.max(
+            summary.guruTransformatif.total,
+
+            Number(
+              kategori
+                .guruTransformatif
+                .totalPeserta || 0
+            )
+          );
+
+      }
+
+
+      /* ------------------------------------------
+         GURU DEDIKATIF
+         ------------------------------------------ */
+
+      if (
+        kategori.guruDedikatif
+      ) {
+
+        summary.guruDedikatif.sudah +=
+          Number(
+            kategori
+              .guruDedikatif
+              .sudahDinilai || 0
+          );
+
+
+        summary.guruDedikatif.total =
+          Math.max(
+            summary.guruDedikatif.total,
+
+            Number(
+              kategori
+                .guruDedikatif
+                .totalPeserta || 0
+            )
+          );
+
+      }
+
+    }
+  );
+
+
+  /*
+   * Karena totalPeserta berasal dari satu juri,
+   * maka total maksimum penilaian =
+   *
+   * jumlah peserta x 6 juri
+   */
+
+  summary.kepala.total *= 6;
+
+  summary.guruTransformatif.total *= 6;
+
+  summary.guruDedikatif.total *= 6;
+
+
+  /*
+   * Tampilkan kartu ringkasan
+   */
+
+  renderSummaryCards(
+    summary
+  );
+
+
+  /*
+   * ==================================================
+   * TABEL STATUS 6 JURI
+   * ==================================================
+   */
+
   const tbody =
-    document
-      .querySelector(
-        '#juryStatusTable tbody'
-      );
+    document.querySelector(
+      '#juryStatusTable tbody'
+    );
+
+
+  if (!tbody) {
+
+    return;
+  }
 
 
   tbody.innerHTML = '';
 
 
-  result.data.forEach(
+  data.forEach(
     function(item) {
 
       const tr =
@@ -338,55 +531,239 @@ async function loadStatusJuri() {
         );
 
 
+      const kategori =
+        item.kategori || {};
+
+
       tr.innerHTML = `
 
         <td>
           <strong>
             ${escapeHtml(
-              item.juri
+              item.juri || '-'
             )}
           </strong>
         </td>
 
         <td>
           ${progress(
-            item.kategori.kepala
+            kategori.kepala
           )}
         </td>
 
         <td>
           ${progress(
-            item.kategori.guruTransformatif
+            kategori.guruTransformatif
           )}
         </td>
 
         <td>
           ${progress(
-            item.kategori.guruDedikatif
+            kategori.guruDedikatif
           )}
         </td>
 
       `;
 
 
-      tbody.appendChild(tr);
+      tbody.appendChild(
+        tr
+      );
 
     }
   );
+
 }
 
 
 /* =====================================================
-   PROGRESS
+   SUMMARY CARDS
    ===================================================== */
 
-function progress(data) {
+function renderSummaryCards(
+  summary
+) {
+
+  const container =
+    document.getElementById(
+      'summaryCards'
+    );
+
+
+  if (!container) {
+
+    return;
+  }
+
+
+  const cards = [
+
+    {
+      title:
+        'Kepala Sekolah Transformatif',
+
+      data:
+        summary.kepala
+    },
+
+    {
+      title:
+        'Guru Transformatif',
+
+      data:
+        summary.guruTransformatif
+    },
+
+    {
+      title:
+        'Guru Dedikatif',
+
+      data:
+        summary.guruDedikatif
+    }
+
+  ];
+
+
+  container.innerHTML = '';
+
+
+  cards.forEach(
+    function(card) {
+
+      const total =
+        Number(
+          card.data.total || 0
+        );
+
+
+      const sudah =
+        Number(
+          card.data.sudah || 0
+        );
+
+
+      const persen =
+        total > 0
+          ? Math.round(
+              (
+                sudah /
+                total
+              ) * 100
+            )
+          : 0;
+
+
+      const belum =
+        Math.max(
+          total - sudah,
+          0
+        );
+
+
+      const element =
+        document.createElement(
+          'div'
+        );
+
+
+      element.className =
+        'admin-summary-card';
+
+
+      element.innerHTML = `
+
+        <div class="summary-title">
+          ${escapeHtml(
+            card.title
+          )}
+        </div>
+
+        <div class="summary-number">
+          ${sudah}
+          <span>
+            / ${total}
+          </span>
+        </div>
+
+        <div class="summary-label">
+          penilaian juri selesai
+        </div>
+
+        <div class="summary-progress">
+
+          <div
+            class="summary-progress-fill"
+            style="width:${persen}%"
+          ></div>
+
+        </div>
+
+        <div class="summary-footer">
+
+          <span>
+            ${persen}% selesai
+          </span>
+
+          <span>
+            ${belum} belum
+          </span>
+
+        </div>
+
+      `;
+
+
+      container.appendChild(
+        element
+      );
+
+    }
+  );
+
+}
+
+
+/* =====================================================
+   PROGRESS JURI
+   ===================================================== */
+
+function progress(
+  data
+) {
+
+  if (!data) {
+
+    return `
+      <span>-</span>
+    `;
+  }
+
+
+  const sudah =
+    Number(
+      data.sudahDinilai || 0
+    );
+
+
+  const total =
+    Number(
+      data.totalPeserta || 0
+    );
+
+
+  const persentase =
+    Number(
+      data.persentase || 0
+    );
+
 
   return `
 
     <div>
+
       <strong>
-        ${data.sudahDinilai}/${data.totalPeserta}
+        ${sudah}/${total}
       </strong>
 
       <div class="progress-bar">
@@ -394,14 +771,14 @@ function progress(data) {
         <div
           class="progress-fill"
           style="
-            width:${data.persentase}%;
+            width:${persentase}%;
           "
         ></div>
 
       </div>
 
       <small>
-        ${data.persentase}%
+        ${persentase}%
       </small>
 
     </div>
@@ -411,7 +788,7 @@ function progress(data) {
 
 
 /* =====================================================
-   REKAP
+   LOAD REKAP
    ===================================================== */
 
 async function loadRekap() {
@@ -431,7 +808,8 @@ async function loadRekap() {
   if (!result.success) {
 
     throw new Error(
-      result.message
+      result.message ||
+      'Gagal mengambil rekap.'
     );
   }
 
@@ -456,12 +834,26 @@ function loadRekapCategory() {
   }
 
 
+  const selector =
+    document.getElementById(
+      'rekapCategory'
+    );
+
+
+  const table =
+    document.getElementById(
+      'rekapTable'
+    );
+
+
+  if (!selector || !table) {
+
+    return;
+  }
+
+
   const kategori =
-    document
-      .getElementById(
-        'rekapCategory'
-      )
-      .value;
+    selector.value;
 
 
   const data =
@@ -477,16 +869,23 @@ function loadRekapCategory() {
 
 
   const tbody =
-    document
-      .querySelector(
-        '#rekapTable tbody'
-      );
+    table.querySelector(
+      'tbody'
+    );
 
 
   tbody.innerHTML = '';
 
 
-  data.peserta.forEach(
+  const peserta =
+    Array.isArray(
+      data.peserta
+    )
+      ? data.peserta
+      : [];
+
+
+  peserta.forEach(
     function(item) {
 
       const tr =
@@ -495,27 +894,39 @@ function loadRekapCategory() {
         );
 
 
+      const nilaiJuri =
+        Array.isArray(
+          item.juri
+        )
+          ? item.juri
+          : [];
+
+
       tr.innerHTML = `
 
         <td>
-          ${item.no}
+          ${item.no ?? '-'}
         </td>
 
         <td>
           ${escapeHtml(
-            item.nama
+            item.nama || '-'
           )}
         </td>
 
-        ${item.juri.map(
+        ${nilaiJuri.map(
           function(nilai) {
 
             return `
+
               <td>
-                ${nilai > 0
-                  ? formatNumber(nilai)
-                  : '-'}
+                ${
+                  Number(nilai) > 0
+                    ? formatNumber(nilai)
+                    : '-'
+                }
               </td>
+
             `;
 
           }
@@ -524,10 +935,14 @@ function loadRekapCategory() {
         <td>
           <strong>
             ${
-              item.rataRata > 0
+              Number(
+                item.rataRata || 0
+              ) > 0
+
                 ? formatNumber(
                     item.rataRata
                   )
+
                 : '-'
             }
           </strong>
@@ -544,15 +959,18 @@ function loadRekapCategory() {
       `;
 
 
-      tbody.appendChild(tr);
+      tbody.appendChild(
+        tr
+      );
 
     }
   );
+
 }
 
 
 /* =====================================================
-   JUARA
+   LOAD HASIL JUARA
    ===================================================== */
 
 async function loadJuara() {
@@ -572,28 +990,38 @@ async function loadJuara() {
   if (!result.success) {
 
     throw new Error(
-      result.message
+      result.message ||
+      'Gagal mengambil hasil juara.'
     );
   }
 
 
   const container =
-    document
-      .getElementById(
-        'winnerContainer'
-      );
+    document.getElementById(
+      'winnerContainer'
+    );
+
+
+  if (!container) {
+
+    return;
+  }
 
 
   container.innerHTML = '';
 
 
+  const data =
+    result.data || {};
+
+
   Object.keys(
-    result.data
+    data
   ).forEach(
     function(key) {
 
       const category =
-        result.data[key];
+        data[key];
 
 
       const section =
@@ -610,63 +1038,91 @@ async function loadJuara() {
 
         <h3>
           ${escapeHtml(
-            category.kategori
+            category.kategori ||
+            key
           )}
         </h3>
 
       `;
 
 
-      category.juara
-        .forEach(
-          function(item) {
-
-            let medal = '';
-
-            if (item.juara === 1)
-              medal = '🥇';
-
-            else if (
-              item.juara === 2
-            )
-              medal = '🥈';
-
-            else if (
-              item.juara === 3
-            )
-              medal = '🥉';
+      const juara =
+        Array.isArray(
+          category.juara
+        )
+          ? category.juara
+          : [];
 
 
-            html += `
+      juara.forEach(
+        function(item) {
 
-              <div class="winner-row">
+          let medal = '';
 
-                <div class="winner-rank">
-                  ${medal}
-                  ${item.juara}
-                </div>
 
-                <div class="winner-name">
-                  ${escapeHtml(
-                    item.nama
-                  )}
-                </div>
+          if (
+            Number(item.juara) === 1
+          ) {
 
-                <div class="winner-score">
-                  ${
-                    item.rataRata > 0
-                      ? formatNumber(
-                          item.rataRata
-                        )
-                      : '-'
-                  }
-                </div>
+            medal = '🥇';
+
+          } else if (
+            Number(item.juara) === 2
+          ) {
+
+            medal = '🥈';
+
+          } else if (
+            Number(item.juara) === 3
+          ) {
+
+            medal = '🥉';
+
+          }
+
+
+          html += `
+
+            <div class="winner-row">
+
+              <div class="winner-rank">
+
+                ${medal}
+
+                ${item.juara}
 
               </div>
 
-            `;
-          }
-        );
+              <div class="winner-name">
+
+                ${escapeHtml(
+                  item.nama || '-'
+                )}
+
+              </div>
+
+              <div class="winner-score">
+
+                ${
+                  Number(
+                    item.rataRata || 0
+                  ) > 0
+
+                    ? formatNumber(
+                        item.rataRata
+                      )
+
+                    : '-'
+                }
+
+              </div>
+
+            </div>
+
+          `;
+
+        }
+      );
 
 
       section.innerHTML =
@@ -679,6 +1135,7 @@ async function loadJuara() {
 
     }
   );
+
 }
 
 
@@ -694,6 +1151,10 @@ function adminLogout() {
 
 
   adminToken =
+    null;
+
+
+  currentRekap =
     null;
 
 
@@ -718,6 +1179,7 @@ function adminLogout() {
       'adminPin'
     )
     .value = '';
+
 }
 
 
@@ -729,7 +1191,19 @@ function formatNumber(
   value
 ) {
 
-  return Number(value)
+  const number =
+    Number(value);
+
+
+  if (
+    !Number.isFinite(number)
+  ) {
+
+    return '-';
+  }
+
+
+  return number
     .toFixed(4)
     .replace(
       /\.?0+$/,
@@ -749,26 +1223,32 @@ function escapeHtml(
   return String(
     value ?? ''
   )
+
   .replace(
     /&/g,
     '&amp;'
   )
+
   .replace(
     /</g,
     '&lt;'
   )
+
   .replace(
     />/g,
     '&gt;'
   )
+
   .replace(
     /"/g,
     '&quot;'
   )
+
   .replace(
     /'/g,
     '&#039;'
   );
+
 }
 
 
@@ -780,15 +1260,23 @@ function showLoading(
   show
 ) {
 
-  document
-    .getElementById(
+  const element =
+    document.getElementById(
       'loading'
-    )
-    .classList
-    .toggle(
-      'hidden',
-      !show
     );
+
+
+  if (!element) {
+
+    return;
+  }
+
+
+  element.classList.toggle(
+    'hidden',
+    !show
+  );
+
 }
 
 
