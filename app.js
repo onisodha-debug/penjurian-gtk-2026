@@ -61,19 +61,19 @@ const ASPECTS = {
       weight: 20
     },
     {
-      name: 'Kepemimpinan Transformatif',
+      name: 'Nilai Transformatif & Kebaruan',
       weight: 25
     },
     {
-      name: 'Dampak dan Keberlanjutan',
+      name: 'Kolaborasi Dan Pemanfaatan Sumber Daya',
       weight: 15
     },
     {
-      name: 'Kolaborasi',
+      name: 'Dampak Nyata Dan Kekuatan Bukti',
       weight: 15
     },
     {
-      name: 'Refleksi dan Inspirasi',
+      name: 'Keberlanjutan, Pengimbasan, Dan Daya Inspirasi',
       weight: 10
     }
   ],
@@ -88,19 +88,19 @@ const ASPECTS = {
       weight: 20
     },
     {
-      name: 'Kualitas Transformasi',
+      name: 'Nilai Transformatif & Kebaruan',
       weight: 25
     },
     {
-      name: 'Dampak',
+      name: 'Kolaborasi Dan Pemanfaatan Sumber Daya',
       weight: 15
     },
     {
-      name: 'Keberlanjutan',
+      name: 'Dampak Nyata Dan Kekuatan Bukti',
       weight: 15
     },
     {
-      name: 'Refleksi dan Inspirasi',
+      name: 'Keberlanjutan, Pengimbasan, Dan Daya Inspirasi',
       weight: 10
     }
   ],
